@@ -2,6 +2,8 @@
 
 > :warning: **Diese Software wird nicht mehr aktiv von der Deutschen Digitalen Bibliothek weiterentwickelt - es kann auch kein Support gewährleistet werden**
 
+> :information_source: Ein Video-Tutorial zur Benutzung von Structmeta für Zeitungen finden Sie [bei Vimeo](https://vimeo.com/774251098).
+
 ## Beschreibung
 
 Mit dem structmeta-Script lassen sich durch die Ablage von Scans in einer speziellen Ordnerstruktur DDB- bzw. Zeitungsportal konforme METS/MODS XML-Dateien herstellen.
