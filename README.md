@@ -1,18 +1,8 @@
----
-title: "Structmeta"
-author: "Karl-Ulrich Krägelin"
-date: "24.11.2022"
-subject: "Markdown"
-titlepage: true
-footnotes-pretty: true
-caption-justification: raggedleft
-disable-header-and-footer: false
-footer-left: "\\hspace{1cm}"
-lang: "de"
-toc-own-page: true
-geometry:
-- margin=25mm
----
+# Structmeta
+
+> :warning: **Diese Software wird nicht mehr aktiv von der Deutschen Digitalen Bibliothek weiterentwickelt - es kann auch kein Support gewährleistet werden**
+
+## Beschreibung
 
 Mit dem structmeta-Script lassen sich durch die Ablage von Scans in einer speziellen Ordnerstruktur DDB- bzw. Zeitungsportal konforme METS/MODS XML-Dateien herstellen.
 
@@ -39,17 +29,17 @@ Das Script kann auch im Kommandozeilenmodus laufen:
 python structmeta.py --ignore-gooey --help
 ```
 
-# Vorbemerkungen
+## Vorbemerkungen
 
 Das Programm geht davon aus, dass die Namen der Bilderdateien auf Projektebene eindeutig sind. Ist dies nicht der Fall, müssen die Bilddateien umbennant werden (Option "Rename Images").
 
-# Metadaten
+## Metadaten
 
 Die TOML Datei besteht aus vier Ebenen: Einmal Informationen zum Datenpartner, und einmal Informationen zu den Objekten. Die Ebenen werden durch die Strings `[institution]`, `[objects]`, `[images]` und `[OCR]` getrennt. Unterhalb dieser Ebenen wird pro Zeile einem Schlüssel durch ein `=` Zeichen ein Wert zugewiesen. Zeichenfolgen werden dabei in Anführungsstriche gesetzt. Die TOML-Datei ist mit einem Plaintext-Texteditor zu bearbeiten (nicht etwa mit Word o.ä.). Mit Tools wie bspw. [TOML Lint](https://www.toml-lint.com/) kann die erzeugte TOML Datei validiert und auf Syntaxfehler geprüft werden. Das sieht dann exemplarisch so aus - hier fehlt in Zeile 16 ein einfaches Anführungszeichen:
 
 ![](assets/tomllint.png)
 
-## TOML Beispiel
+### TOML Beispiel
 
 ```toml
 [institution]
@@ -79,11 +69,11 @@ tesseract_language = "deu"
 #tesseract_executable = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 ```
 
-Erweiterte Informationen zu den Elementen finden Sie unter: .
+Erweiterte Informationen zu den Elementen finden Sie unter: https://github.com/karkraeg/structmeta/blob/main/toml-elements.md.
 
-# Ordnerstrukturen
+## Ordnerstrukturen
 
-## Zeitungen
+### Zeitungen
 
 Für Zeitungen muss die Ordner/Dateistruktur wie folgt aussehen:
 
@@ -97,7 +87,7 @@ Auf der obersten Ebene ein Ordner der nach der [ZDB ID](https://zdb-katalog.de) 
     - 1802-01-02
 ```
 
-## Zeitschriften (Journals)
+### Zeitschriften (Journals)
 
 Achtung: Structmeta kann _keine Gesamtaufnahme_ erstellen, da diese von der DDB auch nicht gehostet werden könnte. Daher werden Jorunals als `monograph` angegeben.
 
@@ -119,7 +109,7 @@ Testzeitschrift
     - Jahrgang_1809
 ```
 
-## Monographien (Work in Progress)
+### Monographien (Work in Progress)
 
 Ordner/Dateistruktur: Auf der obersten Ebene ein Ordner unter dem die Monographien sortiert werden, darunter für jedes Werk ein Ordner. Unterhalb eines jeden Werkes dann für die Strukturelemente Ordner, in denen sich die entsprechenden Bilder befinden.
 
@@ -141,13 +131,13 @@ Monographien
     - Der Zauberlehrling
 ```
 
-# OCR
+## OCR
 
 Unter Verwendung einer externen Installation von Tesseract kann für jede Bilddatei eine zugehörige ALTO XML Datei erstellt und in einer `mets:fileGrp@USE=FULLTEXT` referenziert werden.
 
-## Installation von Tesseract
+### Installation von Tesseract
 
-### Ubuntu
+#### Ubuntu
 
 ```
 sudo add-apt-repository ppa:alex-p/tesseract-ocr-devel
@@ -156,7 +146,7 @@ sudo apt install tesseract-ocr
 sudo apt-get install tesseract-ocr-deu
 ```
 
-### Windows
+#### Windows
 
 - siehe https://github.com/UB-Mannheim/tesseract/wiki#tesseract-installer-for-windows
 - Im Schritt Komponenten auswählen entsprechende benötigte Sprachpakete laden:
