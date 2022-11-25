@@ -1,0 +1,10 @@
+lxml
+loguru
+click
+toml
+pillow
+PyMuPDF
+pandas
+gooey
+pytesseract
+natsort
