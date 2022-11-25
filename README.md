@@ -4,6 +4,10 @@
 
 > :information_source: Ein Video-Tutorial zur Benutzung von Structmeta für Zeitungen finden Sie [bei Vimeo](https://vimeo.com/774251098).
 
+## Installation
+
+Entweder die ausführbaren Dateien für Windows von https://github.com/karkraeg/structmeta/releases/ herunterladen oder, für Entwickler und technisch versierte Nutzer:innen, das Git Repo klonen und mit `pip install .` im Verzeichnis die Installation starten.
+
 ## Beschreibung
 
 Mit dem structmeta-Script lassen sich durch die Ablage von Scans in einer speziellen Ordnerstruktur DDB- bzw. Zeitungsportal konforme METS/MODS XML-Dateien herstellen.
