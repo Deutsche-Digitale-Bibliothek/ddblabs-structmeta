@@ -130,7 +130,7 @@ def createJPGfromTIFF(
     listoftiffs: list,
     logger,
     max_dimensions: int,
-    jpg_compression_level: int,
+    jpg_quality: int,
     outputfolder: Path,
 ):
     print(f"Erstelle JPGs aus {len(listoftiffs)} Dateien", flush=True)
@@ -151,7 +151,7 @@ def createJPGfromTIFF(
                 img.save(
                     Path(outputfolder / "binaries" / jpgfilename),
                     "JPEG",
-                    quality=jpg_compression_level,
+                    quality=jpg_quality,
                 )
             except Exception as e:
                 logger.error(e)

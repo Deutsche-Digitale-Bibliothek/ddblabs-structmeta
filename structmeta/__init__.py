@@ -25,7 +25,7 @@ __version__ = pkg_resources.require("structmeta")[0].version
 
 
 def getpictures(
-    folder: Path, max_dimensions, jpg_compression_level: int, outputfolder
+    folder: Path, max_dimensions, jpg_quality: int, outputfolder
 ):
     """ Function to process all image needs
 
@@ -34,7 +34,7 @@ def getpictures(
 
         max_dimensions -- int or None to scale images by
 
-        jpg_compression_level -- int to compress jpgs if generating jpgs
+        jpg_quality -- int to compress jpgs if generating jpgs
 
         outputfolder -- folder to output generated jpgs to
 
@@ -69,7 +69,7 @@ def getpictures(
             # Wenn wir TIFs finden, aus denen JPGs machen. Die JPGs werden dann direkt schon in den output folder geschrieben
             initialpictureformat = alltiffs[0].suffix.replace(".", "")
             helpers.createJPGfromTIFF(
-                alltiffs, logger, max_dimensions, jpg_compression_level, outputfolder
+                alltiffs, logger, max_dimensions, jpg_quality, outputfolder
             )
             # wenn TIF, dann verweist JPGs direkt auf die erzeugten JPGs im outputordner
             jpgs = [
@@ -198,7 +198,7 @@ def newspaperMETS(
     tesseract_language,
     renameimages,
     max_dimensions,
-    jpg_compression_level,
+    jpg_quality,
 ):
 
     zdb_id = folder.name
@@ -221,7 +221,7 @@ def newspaperMETS(
         jpgs, thumbs = processImages(
             issue,
             max_dimensions,
-            jpg_compression_level,
+            jpg_quality,
             tesseract_language,
             identifier,
             do_thumbs,
@@ -359,7 +359,7 @@ def monographMETS(
     tesseract_language,
     renameimages,
     max_dimensions,
-    jpg_compression_level,
+    jpg_quality,
 ):
 
     for volume in [f for f in folder.glob("*") if f.is_dir()]:
@@ -509,7 +509,7 @@ def monographMETS(
 def processImages(
     folder: Path,
     max_dimensions: Union[int, bool],
-    jpg_compression_level: int,
+    jpg_quality: int,
     tesseract_language: Union[str, bool],
     identifier: str,
     do_thumbs: bool,
@@ -526,7 +526,7 @@ def processImages(
     '''
 
     jpgs, existingthumbs, initialpictureformat, alltiffs = getpictures(
-        folder, max_dimensions, jpg_compression_level, outputfolder
+        folder, max_dimensions, jpg_quality, outputfolder
     )
     # initialjpgs sollte immer auf die Originalpfade verweisen
     # jpgs verweist immer auf die entweder erzeugten oder kopierten
@@ -634,7 +634,7 @@ def journalMETS(
     tesseract_language,
     renameimages,
     max_dimensions,
-    jpg_compression_level,
+    jpg_quality,
 ):
     """
     Ausgabe: Pro Jahrgang eine METS Datei, in der die einzelnen Ausgaben eigene dmdSecs haben.
@@ -671,7 +671,7 @@ def journalMETS(
                 structjpgs, structthumbs = processImages(
                     elem,
                     max_dimensions,
-                    jpg_compression_level,
+                    jpg_quality,
                     tesseract_language,
                     title.replace(" ", "_") + "_" + year + "_" + elemname.replace(" ", "_") + "_",
                     do_thumbs,
@@ -701,7 +701,7 @@ def journalMETS(
             alljpgs, thumbs = processImages(
                     volume,
                     max_dimensions,
-                    jpg_compression_level,
+                    jpg_quality,
                     tesseract_language,
                     title.replace(" ", "_") + "_" + year,
                     do_thumbs,
@@ -942,11 +942,11 @@ def main():
         max_dimensions = metadata["images"]["max_dimensions"]
 
     try:
-        metadata["images"]["jpg_compression_level"]
+        metadata["images"]["jpg_quality"]
     except:
-        jpg_compression_level = 90
+        jpg_quality = 90
     else:
-        jpg_compression_level = metadata["images"]["jpg_compression_level"]
+        jpg_quality = metadata["images"]["jpg_quality"]
     ocr = args.OCR
     if ocr == True:
         try:
@@ -1015,7 +1015,7 @@ def main():
             tesseract_language,
             renameimages,
             max_dimensions,
-            jpg_compression_level,
+            jpg_quality,
         )
     elif metadata["objects"]["type"] == "monograph":
         monographMETS(
@@ -1028,7 +1028,7 @@ def main():
             tesseract_language,
             renameimages,
             max_dimensions,
-            jpg_compression_level,
+            jpg_quality,
         )
     elif metadata["objects"]["type"] == "newspaper":
         newspaperMETS(
@@ -1041,7 +1041,7 @@ def main():
             tesseract_language,
             renameimages,
             max_dimensions,
-            jpg_compression_level,
+            jpg_quality,
         )
     else:
         logger.error("Fehler")

@@ -68,7 +68,7 @@ title = "Teststätter Zeitung"
 [images]
 #imagebaseurl = "http://www.mein-archiv.de/repo/"
 max_dimensions = 500
-jpg_compression_level = 20
+jpg_quality = 20
 
 [OCR]
 tesseract_language = "deu"
