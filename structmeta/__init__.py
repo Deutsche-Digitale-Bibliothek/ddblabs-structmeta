@@ -286,10 +286,7 @@ def newspaperMETS(
                         </mets:xmlData>
                     </mets:mdWrap>
                 </mets:dmdSec>
-                <mets:amdSec
-                    xmlns="http://www.w3.org/TR/xhtml1/strict"
-                    xmlns:dv="http://dfg-viewer.de/"
-                    xmlns:xs="http://www.w3.org/2001/XMLSchema" ID="amd">
+                <mets:amdSec xmlns:dv="http://dfg-viewer.de/" ID="amd">
                     <mets:rightsMD ID="RIGHTS">
                         <mets:mdWrap MIMETYPE="text/xml" MDTYPE="OTHER" OTHERMDTYPE="DVRIGHTS">
                             <mets:xmlData>
@@ -315,9 +312,7 @@ def newspaperMETS(
                     </mets:fileGrp>
                     {flgrp_fulltext(jpgs, OCR, create_filegrp_fulltext)}
                 </mets:fileSec>
-                <mets:structMap
-                    xmlns="http://www.w3.org/TR/xhtml1/strict"
-                    xmlns:dv="http://dfg-viewer.de/" ID="psmp" TYPE="PHYSICAL">
+                <mets:structMap TYPE="PHYSICAL">
                     <mets:div ID="phys" CONTENTIDS="NULL" TYPE="physSequence">
                         {structMapPhysical(jpgs, OCR, create_filegrp_fulltext)}
                     </mets:div>
@@ -325,10 +320,7 @@ def newspaperMETS(
                 <mets:structMap TYPE="LOGICAL">
                     <mets:div TYPE="issue" ID="LOG" DMDID="dmd" ADMID="amd" ORDER="1" ORDERLABEL="{dateissued}" LABEL="{metadata['objects']['title'] + ' ' + modsnumber }"></mets:div>
                 </mets:structMap>
-                <mets:structLink
-                    xmlns="http://www.w3.org/TR/xhtml1/strict"
-                    xmlns:dv="http://dfg-viewer.de/"
-                    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+                <mets:structLink>
                         {structLink('LOG', jpgs, 0)}
                 </mets:structLink>
             </mets:mets>
