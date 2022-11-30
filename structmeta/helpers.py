@@ -2,7 +2,7 @@ import pytesseract
 from natsort import natsorted
 from PIL import Image, ImageFile
 from pathlib import Path
-from zipfile import ZipFile
+import zipfile
 import time
 import fitz  # PyMuPDF
 import io
@@ -104,19 +104,19 @@ def zipfiles(inputfolder: Path, outputfolder: Path, logger, logname: str, OCR: b
     binarieszip = outputfolder / (t + "__" + inputfolder.name + "_binaries.zip")
     metszip = outputfolder / (t + "__" + inputfolder.name + "_mets.zip")
 
-    with ZipFile(binarieszip, "w") as zipObj:
+    with zipfile.ZipFile(binarieszip, "w", compression=zipfile.ZIP_DEFLATED) as zipObj:
         for f in list(Path(outputfolder / "binaries").rglob("*.jpg")):
             zipObj.write(f, arcname=f.name)
             f.unlink(missing_ok=True)
         logger.info("JPGs gezippt")
     if OCR == True:
-        with ZipFile(binarieszip, "a") as zipObj:
+        with zipfile.ZipFile(binarieszip, "a", compression=zipfile.ZIP_DEFLATED) as zipObj:
             for f in list(Path(outputfolder / "binaries").rglob("*.xml")):
                 zipObj.write(f, arcname=f.name)
                 f.unlink(missing_ok=True)
             logger.info("ALTO XML gezippt")
 
-    with ZipFile(metszip, "w") as zipObj:
+    with zipfile.ZipFile(metszip, "w", compression=zipfile.ZIP_DEFLATED) as zipObj:
         for f in list(Path(outputfolder).glob("*.xml")):
             zipObj.write(f, arcname=f.name)
             f.unlink(missing_ok=True)

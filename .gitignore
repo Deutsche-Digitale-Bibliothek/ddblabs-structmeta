@@ -5,3 +5,4 @@ structmeta.egg-info/*
 *.zip
 *.jpg
 *.pdf
+build/*
