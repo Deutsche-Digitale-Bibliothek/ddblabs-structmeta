@@ -6,7 +6,7 @@
 
 ## Installation
 
-Entweder die ausführbaren Dateien für Windows von https://github.com/karkraeg/structmeta/releases/ herunterladen oder, für Entwickler und technisch versierte Nutzer:innen, das Git Repo klonen und mit `pip install .` im Verzeichnis die Installation starten.
+Entweder die ausführbaren Dateien für Windows von https://github.com/Deutsche-Digitale-Bibliothek/ddblabs-structmeta/releases herunterladen oder, für Entwickler und technisch versierte Nutzer:innen, das Git Repo klonen und mit `pip install .` im Verzeichnis die Installation starten.
 
 ## Beschreibung
 
