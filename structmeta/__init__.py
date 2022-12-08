@@ -24,10 +24,8 @@ if sys.stderr.encoding != "UTF-8":
 __version__ = pkg_resources.require("structmeta")[0].version
 
 
-def getpictures(
-    folder: Path, max_dimensions, jpg_quality: int, outputfolder
-):
-    """ Function to process all image needs
+def getpictures(folder: Path, max_dimensions, jpg_quality: int, outputfolder):
+    """Function to process all image needs
 
     Arguments:
         folder -- Path to folder with images
@@ -208,7 +206,13 @@ def newspaperMETS(
     for issue in issuefolders:
         i += 1
         print(f"Fortschritt: {i} von {len(issuefolders)}", flush=True)
-        dateissued = re.sub(r"^(\d{4}-\d{2}-\d{2}).+", r"\1", issue.name)
+        isodate = re.findall(r"(\d{4}-\d{2}-\d{2})", issue.name)
+        if len(isodate) != 0:
+            dateissued = isodate[0]
+        else:
+            print(f"Bei {issue} konnte kein ISO Tagesdatum erkannt werden.", flush=True)
+            logger.error(f"Bei {issue} konnte kein ISO Tagesdatum erkannt werden.")
+            break
         modsnumber = re.sub(r"(\d{4})-(\d{2})-(\d{2})", r"\3.\2.\1", dateissued)
         identifier = zdb_id + "__" + issue.name
         datecreated = time.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -302,8 +306,7 @@ def newspaperMETS(
                         </mets:mdWrap>
                     </mets:rightsMD>
                 </mets:amdSec>
-                <mets:fileSec
-                    xmlns:dv="http://dfg-viewer.de/">
+                <mets:fileSec>
                     <mets:fileGrp USE="DEFAULT">
                         {flgrp(jpgs)}
                     </mets:fileGrp>
@@ -397,8 +400,7 @@ def monographMETS(
         metsvorlage = f"""
     <mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
         <mets:metsHdr CREATEDATE="{time.strftime("%Y-%m-%dT%H:%M:%SZ")}" LASTMODDATE="{datecreated}">
-                    <mets:agent
-                        xmlns:dv="http://dfg-viewer.de/" ROLE="CREATOR" TYPE="ORGANIZATION">
+                    <mets:agent ROLE="CREATOR" TYPE="ORGANIZATION">
                         <mets:name>{metadata['institution']['name']}</mets:name>
                     </mets:agent>
                     <mets:agent ROLE="OTHER" TYPE="OTHER" OTHERTYPE="SOFTWARE">
@@ -510,12 +512,12 @@ def processImages(
     OCR: bool,
     imagebaseurl: Union[str, bool],
 ):
-    '''
+    """
     Diese Funktion regelt alle Angelegenheiten, die die Bilder betreffen:
     Return:
         - eine Liste mit Pfaden zu den Bilddateien als JPG im Ausgabe Ordner
         - eine Liste mit Pfaden zu den Thumbnails als JPG im Ausgabe Ordner
-    '''
+    """
 
     jpgs, existingthumbs, initialpictureformat, alltiffs = getpictures(
         folder, max_dimensions, jpg_quality, outputfolder
@@ -529,7 +531,7 @@ def processImages(
     # --------------------------------------
     if renameimages == True:
         # wenn umbenannt werde soll:
-        jpgs = helpers.renamePictures(jpgs, identifier, outputfolder, '')
+        jpgs = helpers.renamePictures(jpgs, identifier, outputfolder, "")
     else:
         # wenn nicht umbennant werden soll, schauen ob wir ursprünglich JPGs hatten
         if initialpictureformat in ["jpg", "jpeg"]:
@@ -547,7 +549,9 @@ def processImages(
             pass
         if renameimages == True:
             # vorhandene Thumbs umbenennen und in den output Ordner kopieren
-            thumbs = helpers.renamePictures(existingthumbs, identifier, outputfolder, '_thumb')
+            thumbs = helpers.renamePictures(
+                existingthumbs, identifier, outputfolder, "_thumb"
+            )
         else:
             # es gibt schon welche und die sollen nicht umbennant weden. Dann werden sie in den Output ordner kopiert.
             for j in existingthumbs:
@@ -665,7 +669,12 @@ def journalMETS(
                     max_dimensions,
                     jpg_quality,
                     tesseract_language,
-                    title.replace(" ", "_") + "_" + year + "_" + elemname.replace(" ", "_") + "_",
+                    title.replace(" ", "_")
+                    + "_"
+                    + year
+                    + "_"
+                    + elemname.replace(" ", "_")
+                    + "_",
                     do_thumbs,
                     outputfolder,
                     renameimages,
@@ -691,17 +700,17 @@ def journalMETS(
             slink += structLink(f"LOG_1", alljpgs, 0)
         else:
             alljpgs, thumbs = processImages(
-                    volume,
-                    max_dimensions,
-                    jpg_quality,
-                    tesseract_language,
-                    title.replace(" ", "_") + "_" + year,
-                    do_thumbs,
-                    outputfolder,
-                    renameimages,
-                    OCR,
-                    imagebaseurl,
-                )
+                volume,
+                max_dimensions,
+                jpg_quality,
+                tesseract_language,
+                title.replace(" ", "_") + "_" + year,
+                do_thumbs,
+                outputfolder,
+                renameimages,
+                OCR,
+                imagebaseurl,
+            )
 
         structmaplogical = ""
         orderid = 0
@@ -907,10 +916,7 @@ def main():
         help="Keine Volltext Funktionalitäten",
     )
     mutual_parser.add_argument(
-        "--ocr",
-        dest="OCR",
-        action="store_true",
-        help="Führe OCR mit Tesseract durch"
+        "--ocr", dest="OCR", action="store_true", help="Führe OCR mit Tesseract durch"
     )
     mutual_parser.add_argument(
         "--fulltext",
