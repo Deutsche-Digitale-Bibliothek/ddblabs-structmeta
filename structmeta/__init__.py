@@ -534,7 +534,6 @@ def monographMETS(
             doc = etree.fromstring(metsvorlage)
         except etree.XMLSyntaxError as e:
             logger.warning(f"Fehler beim parsen des erstellen XML: {e}")
-            print(f"Fehler beim parsen des erstellen XML: {e}")
             return
         else:
             with open(outputfolder / (book.name + "_mets.xml"), "w") as f:
@@ -629,6 +628,7 @@ def processImages(
 
     if OCR == True:
         if len(alltiffs) != 0:
+            # Wenn es TIFFs waren, dann OCR auf die TIFFs - dann dürfen die JPGs aber nicht kleingerechnet werden...
             helpers.ocr(
                 alltiffs,
                 logger,
