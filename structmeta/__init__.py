@@ -329,19 +329,17 @@ def newspaperMETS(
             </mets:mets>
         """
 
-        # Save file
         metsvorlage = re.sub("&", "&amp;", metsvorlage)
         try:
-            etree.fromstring(metsvorlage)
+            # Output auf Validität prüfen und speichern
+            doc = etree.fromstring(metsvorlage)
         except etree.XMLSyntaxError as e:
             logger.warning(f"Fehler beim parsen des erstellen XML: {e}")
             return
         else:
-            with open(
-                outputfolder / (identifier + "_mets.xml"), "w", encoding="utf8"
-            ) as f:
-                f.write(metsvorlage)
-                logger.info(f"Wrote METS/MODS: {issue.name}_mets.xml")
+            with open(outputfolder / (identifier + "_mets.xml"), "w") as f:
+                f.write(etree.tostring(doc, encoding="unicode", pretty_print=True))
+            logger.info(f"Wrote METS/MODS: {issue.name}_mets.xml")
 
 
 def monographMETS(
@@ -356,46 +354,90 @@ def monographMETS(
     max_dimensions,
     jpg_quality,
 ):
-
-    for volume in [f for f in folder.glob("*") if f.is_dir()]:
-
-        year = "aus"
-        dateissued = year + "-01-01"
-        title = volume.name.split("_")[0]
+    i = 0
+    bookfolders = [f for f in folder.glob("*") if f.is_dir()]
+    for book in bookfolders:
+        # jedes Buch ist ein Pfad zu einem Ordner
+        booktitle = book.name.split("_")[0]
         datecreated = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        strukturdaten = [f for f in volume.glob("*") if f.is_dir()]
+        i += 1
+        print(f"Fortschritt: {i} von {len(bookfolders)} Büchern", flush=True)
+        strukturdaten = [f for f in book.glob("*") if f.is_dir()]
         additionalslogs = []
+        additionalslogsDMDIDs = []
         slink = ""
+        if "imagebaseurl" in metadata["objects"]:
+            imagebaseurl = metadata["objects"]["imagebaseurl"]
+        else:
+            imagebaseurl = None
         if strukturdaten:
-            jpgs = [f for f in list(Path(volume).glob("**/*.jpg"))]
-            if do_thumbs == True:
-                helpers.generate_thumbails(jpgs, logger)
-            if "imagebaseurl" in metadata["objects"]:
-                # wenn es eine URL geben soll die vor die Bilder kommt, werden die URLs angepasst
-                thumbs = [
-                    metadata["objects"]["imagebaseurl"] + j.stem + "_thumb" + j.suffix
-                    for j in jpgs
-                ]
-                jpgs = [metadata["objects"]["imagebaseurl"] + j.name for j in jpgs]
-            else:
-                # wir wollen jeden JPG Path mit _thumb suffixen
-                thumbs = [j.parent / (j.stem + "_thumb" + j.suffix) for j in jpgs]
+            alljpgs = []
+            allthumbs = []
+            print("Strukturdaten erkannt", flush=True)
             idno = 1
-            for elem in strukturdaten:
-                slink += structLink(f"DMD_{idno}", jpgs)
+            maxnumber = 0
+
+            for elem in natsorted(strukturdaten):
                 elemname = elem.name.split("_")[-1]
+                structjpgs, structthumbs = processImages(
+                    elem,
+                    max_dimensions,
+                    jpg_quality,
+                    tesseract_language,
+                    booktitle.replace(" ", "_")
+                    + "_"
+                    + elemname.replace(" ", "_")
+                    + "_",
+                    do_thumbs,
+                    outputfolder,
+                    renameimages,
+                    OCR,
+                    imagebaseurl,
+                )
+                alljpgs.extend(structjpgs)
+                allthumbs.extend(structthumbs)
+                # wir müssen wissen bei welcher Physischen Seite wird an sich sind
+                # ein elem ist ein Unterornder unter dem book
+                # structjpgs = [f for f in list(Path(elem).glob("**/*.jpg"))]
+                slink += structLink(f"LOG_{idno + 1}", structjpgs, maxnumber)
+                maxnumber += len(structjpgs)
+
                 idno += 1
                 # für jede Strukturebene eine weitere dmdSec erstellen und die an eine Liste mit weiteren dmdSecs anhängen
                 additionalslogs.append(createDMDsec(elemname, idno))
-        else:
-            # keine Strukturdaten
-            jpgs = [f for f in list(Path(volume).glob("*.jpg"))]
-            if do_thumbs == True:
-                helpers.generate_thumbails(jpgs, logger)
-            thumbs = [j.stem + "_thumb" + j.suffix for j in jpgs]
+                d = {"name": "", "idno": ""}
+                d["name"] = elemname
+                d["idno"] = idno
+                additionalslogsDMDIDs.append(d)
 
-        structmapLogical = f'<mets:div ADMID="AMD" DMDID="DMDLOG_0001" ID="LOG" LABEL="{title}" TYPE="monograph"/>'
+            slink += structLink(f"LOG_1", alljpgs, 0)
+        else:
+            alljpgs, allthumbs = processImages(
+                book,
+                max_dimensions,
+                jpg_quality,
+                tesseract_language,
+                booktitle.replace(" ", "_"),
+                do_thumbs,
+                outputfolder,
+                renameimages,
+                OCR,
+                imagebaseurl,
+            )
+            slink += structLink(f"LOG_1", alljpgs, 0)
+
+        if len(additionalslogsDMDIDs) != 0:
+            structmapLogical = f'<mets:div ADMID="AMD" DMDID="DMDLOG_1" ID="LOG_1" LABEL="{booktitle}" TYPE="monograph">'
+            orderid = 0
+            for id in additionalslogsDMDIDs:
+                orderid += 1
+                idno = id["idno"]
+                titel = id["name"]
+                structmapLogical += f'<mets:div ID="LOG_{idno}" DMDID="DMDLOG_{idno}" LABEL="{titel}" TYPE="chapter" ORDER="{orderid}"/>\n'
+            structmapLogical += "</mets:div>"
+        else:
+            # wenn es keine Strukturelemente unterhalb des Buches gibt
+            structmapLogical = f'<mets:div ID="LOG_1" DMDID="DMDLOG_1" LABEL="{booktitle}" TYPE="monograph" ORDER="1"/>\n'
 
         metsvorlage = f"""
     <mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
@@ -419,7 +461,7 @@ def monographMETS(
                            {'<mods:edition>' + metadata['objects']['auflage'] + '</mods:edition>' if 'auflage' in metadata['objects'] else ''}
                             {'<mods:publisher>' + metadata['objects']['verlag'] + '</mods:publisher>' if 'auflage' in metadata['objects'] else ''}
                             <mods:place><mods:placeTerm type="text">{metadata['objects']['erscheinungsort']}</mods:placeTerm></mods:place>
-                            <mods:dateIssued encoding="iso8601" keyDate="yes">{dateissued}</mods:dateIssued>
+                            {'<mods:dateIssued>' + metadata['objects']['erscheinungsjahr'] + '</mods:dateIssued>' if 'auflage' in metadata['objects'] else ''}
                         </mods:originInfo>
                         <mods:originInfo eventType="digitization">
                             <mods:place>
@@ -429,17 +471,18 @@ def monographMETS(
                             <mods:publisher>{metadata['institution']['name']}</mods:publisher>
                             <mods:edition>[Electronic ed.]</mods:edition>
                         </mods:originInfo>
+                        {'<mods:name type="personal"><mods:displayForm>' + metadata['objects']['autor'] + '</mods:displayForm><mods:role><mods:roleTerm authority="marcrelator" type="code">aut</mods:roleTerm></mods:role> </mods:name>'}
                         <mods:recordInfo>
-                            <mods:recordIdentifier source="{metadata['institution']['isil']}">{metadata['institution']['isil'] + '_' + title + '_' + dateissued}</mods:recordIdentifier>
+                            <mods:recordIdentifier source="{metadata['institution']['isil']}">{metadata['institution']['isil'] + '_' + booktitle}</mods:recordIdentifier>
                             <mods:recordCreationDate encoding="iso8601">{datecreated}</mods:recordCreationDate>
                             <mods:recordInfoNote type="license">{metadata['institution']['license']}</mods:recordInfoNote>
                         </mods:recordInfo>
                         <mods:titleInfo>
-                            <mods:title>{title}</mods:title>
+                            <mods:title>{booktitle}</mods:title>
                         </mods:titleInfo>
                         <mods:language><mods:languageTerm authority="iso639-2b" type="code">{metadata['objects']['sprache']}</mods:languageTerm></mods:language>
                         <mods:physicalDescription>
-                            <mods:extent>{len(jpgs)}</mods:extent>
+                            <mods:extent>{len(alljpgs)}</mods:extent>
                         </mods:physicalDescription>
                         <mods:typeOfResource>text</mods:typeOfResource>
                     </mods:mods>
@@ -465,10 +508,10 @@ def monographMETS(
         </mets:amdSec>
         <mets:fileSec>
             <mets:fileGrp USE="DEFAULT">
-                {flgrp(jpgs)}
+                {flgrp(alljpgs)}
             </mets:fileGrp>
             <mets:fileGrp USE="THUMBS">
-                {flgrp_thumbs(thumbs)}
+                {flgrp_thumbs(allthumbs)}
             </mets:fileGrp>
         </mets:fileSec>
         <mets:structMap TYPE="LOGICAL">
@@ -476,7 +519,7 @@ def monographMETS(
         </mets:structMap>
         <mets:structMap TYPE="PHYSICAL">
             <mets:div ID="phys" CONTENTIDS="NULL" TYPE="physSequence">
-                {structMapPhysical(jpgs)}
+                {structMapPhysical(alljpgs, OCR, create_filegrp_fulltext)}
             </mets:div>
         </mets:structMap>
         <mets:structLink>
@@ -485,19 +528,18 @@ def monographMETS(
     </mets:mets>
     """
 
-        # Save file
-        """
-        Output auf Validität prüfen und speichern
-        """
         metsvorlage = re.sub("&", "&amp;", metsvorlage)
         try:
-            etree.fromstring(metsvorlage)
+            # Output auf Validität prüfen und speichern
+            doc = etree.fromstring(metsvorlage)
         except etree.XMLSyntaxError as e:
             logger.warning(f"Fehler beim parsen des erstellen XML: {e}")
+            print(f"Fehler beim parsen des erstellen XML: {e}")
             return
         else:
-            with open("output/" + volume.name + "_mets.xml", "w", encoding="utf8") as f:
-                f.write(metsvorlage)
+            with open(outputfolder / (book.name + "_mets.xml"), "w") as f:
+                f.write(etree.tostring(doc, encoding="unicode", pretty_print=True))
+            logger.info(f"Wrote METS/MODS: {book.name}_mets.xml")
 
 
 def processImages(
@@ -815,28 +857,19 @@ def journalMETS(
     </mets:mets>
     """
 
-        # Save file
         """
         Output auf Validität prüfen und speichern
         """
         metsvorlage = re.sub("&", "&amp;", metsvorlage)
-        with open(
-            outputfolder / (volume.name + "_mets.xml"), "w", encoding="utf8"
-        ) as f:
-            f.write(metsvorlage)
         try:
-            etree.fromstring(metsvorlage)
+            doc = etree.fromstring(metsvorlage)
         except etree.XMLSyntaxError as e:
             logger.warning(f"Fehler beim parsen des erstellen XML: {e}")
             return
         else:
-            # with open('output/' + volume.name + '_mets.xml', 'w', encoding='utf8') as f:
-            #     f.write(metsvorlage)
-            with open(
-                outputfolder / (volume.name + "_mets.xml"), "w", encoding="utf8"
-            ) as f:
-                f.write(metsvorlage)
-                logger.info(f"Wrote METS/MODS: {volume.name}_mets.xml")
+            with open(outputfolder / (volume.name + "_mets.xml"), "w") as f:
+                f.write(etree.tostring(doc, encoding="unicode", pretty_print=True))
+            logger.info(f"Wrote METS/MODS: {volume.name}_mets.xml")
 
 
 @Gooey(
