@@ -41,9 +41,7 @@ Das Programm geht davon aus, dass die Namen der Bilderdateien auf Projektebene e
 
 ## Metadaten
 
-Die TOML Datei besteht aus vier Ebenen: Einmal Informationen zum Datenpartner, und einmal Informationen zu den Objekten. Die Ebenen werden durch die festgelegte Strings in eckigen Klammern definiert. `[institution]` und `[objects]` sind verpflichtend, `[images]` und `[OCR]` können auch weg gelassen werden. Unterhalb dieser Ebenen wird pro Zeile einem Schlüssel durch ein `=` Zeichen ein Wert zugewiesen. Zeichenfolgen werden dabei in Anführungsstriche gesetzt. Die TOML-Datei ist mit einem Plaintext-Texteditor zu bearbeiten (nicht etwa mit Word o.ä.). Mit Tools wie bspw. [TOML Lint](https://www.toml-lint.com/) kann die erzeugte TOML Datei validiert und auf Syntaxfehler geprüft werden. Das sieht dann exemplarisch so aus - hier fehlt in Zeile 16 ein einfaches Anführungszeichen:
-
-![](assets/tomllint.png)
+Die TOML Datei besteht aus vier Ebenen: Einmal Informationen zum Datenpartner, und einmal Informationen zu den Objekten. Die Ebenen werden durch die festgelegte Strings in eckigen Klammern definiert. `[institution]` und `[objects]` sind verpflichtend, `[images]` und `[OCR]` können auch weg gelassen werden. Unterhalb dieser Ebenen wird pro Zeile einem Schlüssel durch ein `=` Zeichen ein Wert zugewiesen. Zeichenfolgen werden dabei in Anführungsstriche gesetzt. Die TOML-Datei ist mit einem Plaintext-Texteditor zu bearbeiten (nicht etwa mit Word o.ä.). Mit Tools wie bspw. [TOML Lint](https://www.toml-lint.com/) kann die erzeugte TOML Datei validiert und auf Syntaxfehler geprüft werden. 
 
 ### TOML Beispiel
 
@@ -76,8 +74,6 @@ tesseract_executable = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 ```
 
 Erweiterte Informationen zu den Elementen finden Sie unter: https://github.com/karkraeg/structmeta/blob/main/toml-elements.md.
-
-> :warning: Wenn OCR durchgeführt werden soll, dürfen nicht gleichzeitig mit `max_dimensions` die JPGs verkleinert werden. (Siehe [Issue](https://github.com/Deutsche-Digitale-Bibliothek/ddblabs-structmeta/issues/2))
 
 ## Ordnerstrukturen
 
@@ -139,7 +135,11 @@ Monographien
     - Der Zauberlehrling
 ```
 
+## Helferfunktionen
+
 ## OCR
+
+> :warning: Wenn OCR durchgeführt werden soll, dürfen nicht gleichzeitig mit `max_dimensions` in der TOML Konfigurationsdatei die Bilder verkleinert werden. (Siehe [Issue](https://github.com/Deutsche-Digitale-Bibliothek/ddblabs-structmeta/issues/2))
 
 Unter Verwendung einer externen Installation von Tesseract kann für jede Bilddatei eine zugehörige ALTO XML Datei erstellt und in einer `mets:fileGrp@USE=FULLTEXT` referenziert werden.
 

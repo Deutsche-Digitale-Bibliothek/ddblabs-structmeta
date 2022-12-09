@@ -46,8 +46,10 @@ def getpictures(folder: Path, max_dimensions, jpg_quality: int, outputfolder):
         alltiffs -- list of file paths to supplied TIF files
 
     """
+
     alljpgs = []
     existingthumbs = []
+
     for ext in ["jpg", "jpeg"]:
         for i in folder.glob("*." + ext):
             if "thumb" not in i.name:
@@ -75,6 +77,11 @@ def getpictures(folder: Path, max_dimensions, jpg_quality: int, outputfolder):
             ]
     else:
         # wir hatten JPGs
+        if max_dimensions:
+            # Bilder verkleinern?
+            helpers.reduceJPGs(
+                alljpgs, logger, max_dimensions, jpg_quality, outputfolder
+            )
         initialpictureformat = alljpgs[0].suffix.replace(".", "")
         jpgs = alljpgs
         alltiffs = []
@@ -559,7 +566,7 @@ def processImages(
         - eine Liste mit Pfaden zu den Bilddateien als JPG im Ausgabe Ordner
         - eine Liste mit Pfaden zu den Thumbnails als JPG im Ausgabe Ordner
     """
-
+    # In der Subfunktion getpictures werden ggf. die Bilder auch komprimiert/kleingerechnet
     jpgs, existingthumbs, initialpictureformat, alltiffs = getpictures(
         folder, max_dimensions, jpg_quality, outputfolder
     )
@@ -577,8 +584,12 @@ def processImages(
         # wenn nicht umbennant werden soll, schauen ob wir ursprünglich JPGs hatten
         if initialpictureformat in ["jpg", "jpeg"]:
             # wenn ja, werden die in den outputerfolder kopiert. Wenn nicht sind die JPGs aus den TIF Dateien ja eh dahin erstellt worden
-            for j in initialjpgs:
-                shutil.copy(str(j), str(Path(outputfolder / "binaries" / j.name)))
+            if max_dimensions:
+                # wenn max_dimensions vergeben ist, sind die Bilder ja schon verkleinert im Output-Ordner.
+                pass
+            else:
+                for j in initialjpgs:
+                    shutil.copy(str(j), str(Path(outputfolder / "binaries" / j.name)))
         # --------------------------------------
     # Thumbnails
     # --------------------------------------

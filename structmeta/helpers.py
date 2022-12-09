@@ -110,7 +110,9 @@ def zipfiles(inputfolder: Path, outputfolder: Path, logger, logname: str, OCR: b
             f.unlink(missing_ok=True)
         logger.info("JPGs gezippt")
     if OCR == True:
-        with zipfile.ZipFile(binarieszip, "a", compression=zipfile.ZIP_DEFLATED) as zipObj:
+        with zipfile.ZipFile(
+            binarieszip, "a", compression=zipfile.ZIP_DEFLATED
+        ) as zipObj:
             for f in list(Path(outputfolder / "binaries").rglob("*.xml")):
                 zipObj.write(f, arcname=f.name)
                 f.unlink(missing_ok=True)
@@ -145,12 +147,12 @@ def createJPGfromTIFF(
             pass
         else:
             try:
-                # als Default keine Skalierung.
+                # als Default keine Skalierung, nur wenn max_dimensions vergeben wurde
                 if max_dimensions:
                     img.thumbnail((max_dimensions, max_dimensions))
                 img.save(
                     Path(outputfolder / "binaries" / jpgfilename),
-                    "JPEG",
+                    "jpeg",
                     quality=jpg_quality,
                 )
             except Exception as e:
@@ -158,6 +160,39 @@ def createJPGfromTIFF(
             else:
                 logger.debug(
                     f"Converted TIF to JPG and saved to {str(Path(outputfolder / 'binaries' / jpgfilename))}."
+                )
+
+
+def reduceJPGs(
+    list_of_images: list,
+    logger,
+    max_dimensions: int,
+    jpg_quality: int,
+    outputfolder: Path,
+):
+    print(f"Verkleinere {len(list_of_images)} JPGs", flush=True)
+    logger.info(f"Verkleinere {len(list_of_images)} JPGs")
+    list_of_images = natsorted(list_of_images)
+    for j in list_of_images:
+        filename = j.stem + ".jpg"
+        try:
+            img = Image.open(j)
+        except Exception as e:
+            logger.error(e)
+            pass
+        else:
+            try:
+                img.thumbnail((max_dimensions, max_dimensions))
+            except Exception as e:
+                logger.error(e)
+            else:
+                img.save(
+                    Path(outputfolder / "binaries" / filename),
+                    "jpeg",
+                    quality=jpg_quality,
+                )
+                logger.debug(
+                    f"JPG verkleinert und in {str(Path(outputfolder / 'binaries' / filename))} geschrieben."
                 )
 
 
