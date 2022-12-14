@@ -89,11 +89,13 @@ def getpictures(folder: Path, max_dimensions, jpg_quality: int, outputfolder):
 
 
 def read_metadata(filepath):
-
-    with open(filepath, "r") as f:
-        metadata = toml.loads(f.read())
-
-    return metadata
+    try:
+        with open(filepath, "r") as f:
+            metadata = toml.loads(f.read())
+    except:
+        sys.exit("Fehler beim Einlesen der Metadaten")
+    else:
+        return metadata
 
 
 def flgrp(listofjpgs: Path):
@@ -386,6 +388,7 @@ def monographMETS(
 
             for elem in natsorted(strukturdaten):
                 elemname = elem.name.split("_")[-1]
+                print(f"Bearbeite Strukturelement {elemname}", flush=True)
                 structjpgs, structthumbs = processImages(
                     elem,
                     max_dimensions,
@@ -445,7 +448,11 @@ def monographMETS(
         else:
             # wenn es keine Strukturelemente unterhalb des Buches gibt
             structmapLogical = f'<mets:div ID="LOG_1" DMDID="DMDLOG_1" LABEL="{booktitle}" TYPE="monograph" ORDER="1"/>\n'
-
+        recordid = (
+            metadata["institution"]["isil"]
+            + "_"
+            + booktitle.replace(" ", "_").replace(":", "_")
+        )
         metsvorlage = f"""
     <mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
         <mets:metsHdr CREATEDATE="{time.strftime("%Y-%m-%dT%H:%M:%SZ")}" LASTMODDATE="{datecreated}">
@@ -480,7 +487,7 @@ def monographMETS(
                         </mods:originInfo>
                         {'<mods:name type="personal"><mods:displayForm>' + metadata['objects']['autor'] + '</mods:displayForm><mods:role><mods:roleTerm authority="marcrelator" type="code">aut</mods:roleTerm></mods:role> </mods:name>'}
                         <mods:recordInfo>
-                            <mods:recordIdentifier source="{metadata['institution']['isil']}">{metadata['institution']['isil'] + '_' + booktitle}</mods:recordIdentifier>
+                            <mods:recordIdentifier source="{metadata['institution']['isil']}">{recordid}</mods:recordIdentifier>
                             <mods:recordCreationDate encoding="iso8601">{datecreated}</mods:recordCreationDate>
                             <mods:recordInfoNote type="license">{metadata['institution']['license']}</mods:recordInfoNote>
                         </mods:recordInfo>
@@ -883,6 +890,16 @@ def journalMETS(
             logger.info(f"Wrote METS/MODS: {volume.name}_mets.xml")
 
 
+def verify_toml(d, key):
+    keys = key.split(".")
+    for k in keys:
+        if k not in d:
+            raise KeyError(f"Key '{k}' not found in dictionary.")
+        else:
+            d = d[k]
+    return True
+
+
 @Gooey(
     program_name="Structmeta",
     required_cols=1,
@@ -971,6 +988,26 @@ def main():
 
     args = parser.parse_args()
     metadata = read_metadata(args.Metadaten)
+
+    mandatory_fields = [
+        "institution.contact",
+        "institution.isil",
+        "institution.license",
+        "institution.logoURL",
+        "institution.name",
+        "institution.siteURL",
+        "objects.type",
+        "objects.place_of_digitization",
+        "objects.sprache",
+        "objects.year_of_digitization",
+        "institution.isil",
+    ]
+    try:
+        for key in mandatory_fields:
+            verify_toml(metadata, key)
+    except KeyError as e:
+        sys.exit(e)
+
     inputfolder = Path(args.Ordner)
     thumbnails = args.Thumbnails
     zip = args.zip
